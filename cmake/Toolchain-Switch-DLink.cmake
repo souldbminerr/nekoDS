@@ -69,7 +69,7 @@ set(cross_prefix aarch64-none-elf-)
 # for `thread_local NDS* NDS::Current`, which faults on Horizon. neko3d
 # builds with the same flag for the same reason.
 set(arch_flags "-mtune=cortex-a57 -ffunction-sections -march=armv8-a+crc+crypto -mtp=soft -fPIE -ftls-model=local-exec")
-set(inc_flags "-I${LIBNX}/include -I${SDL_DLINK_DIR}/include -I${NEKO3D_DIR}/include -I${DLINK_DIR}/include ${arch_flags}")
+set(inc_flags "-I${LIBNX}/include -I${SDL_DLINK_DIR}/include -I${SDL_DLINK_DIR}/include/SDL3 -I${NEKO3D_DIR}/include -I${DLINK_DIR}/include ${arch_flags}")
 set(link_flags "-L${LIBNX}/lib -L${DLINK_DIR}/lib -specs=${LIBNX}/switch.specs ${arch_flags}")
 
 set(CMAKE_SYSTEM_PROCESSOR aarch64 CACHE INTERNAL "processor")

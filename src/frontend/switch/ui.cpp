@@ -9,9 +9,33 @@
 #include <cstring>
 #include <dirent.h>
 #include <cstdio>
+#include <cmath>
+
+#include "SwitchSDL.h"
+
+#if __has_include(<SDL3/SDL.h>)
+#include <SDL3/SDL.h>
+#endif
+#if __has_include(<SDL3/SDL_rect.h>)
+#include <SDL3/SDL_rect.h>
+#endif
+#if __has_include(<SDL3/SDL_pixels.h>)
+#include <SDL3/SDL_pixels.h>
+#endif
+#ifndef SDL_SCALEMODE_LINEAR
+#define SDL_SCALEMODE_LINEAR ((SDL_ScaleMode)1)
+#endif
+#ifndef SDL_SCALEMODE_NEAREST
+#define SDL_SCALEMODE_NEAREST ((SDL_ScaleMode)0)
+#endif
+#ifndef SDL_TEXTUREACCESS_STREAMING
+#define SDL_TEXTUREACCESS_STREAMING ((SDL_TextureAccess)1)
+#endif
+#ifndef SDL_PIXELFORMAT_RGBA8888
+#define SDL_PIXELFORMAT_RGBA8888 ((SDL_PixelFormat)0x16462004u)
+#endif
 
 #include "ui.h"
-#include "SwitchSDL.h"
 #include "SwitchLog.h"
 
 using namespace SwitchSDL;
@@ -187,10 +211,10 @@ void drawLine(float x1, float y1, float x2, float y2, u32 color)
     u8 r = (color >> 24) & 0xFF, g = (color >> 16) & 0xFF, b = (color >> 8) & 0xFF;
     S.SetRenderDrawColor(URen, r, g, b, 255);
     // crude line via thin rects (menus only use h/v lines)
-    SDL_FRect rc;
-    if (y1 == y2) { rc = {std::min(x1,x2), y1, std::abs(x2-x1), 2.0f}; }
-    else if (x1 == x2) { rc = {x1, std::min(y1,y2), 2.0f, std::abs(y2-y1)}; }
-    else { rc = {std::min(x1,x2), std::min(y1,y2), std::abs(x2-x1), 2.0f}; }
+    SDL_FRect rc = {0, 0, 0, 0};
+    if (y1 == y2) { rc.x = std::min(x1,x2); rc.y = y1; rc.w = std::abs(x2-x1); rc.h = 2.0f; }
+    else if (x1 == x2) { rc.x = x1; rc.y = std::min(y1,y2); rc.w = 2.0f; rc.h = std::abs(y2-y1); }
+    else { rc.x = std::min(x1,x2); rc.y = std::min(y1,y2); rc.w = std::abs(x2-x1); rc.h = 2.0f; }
     S.RenderFillRect(URen, &rc);
 }
 

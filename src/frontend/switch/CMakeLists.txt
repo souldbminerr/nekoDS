@@ -55,8 +55,16 @@ target_include_directories(nekoDS-switch.elf PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/../.."
     "${SDL_DLINK_DIR}/include"
+    "${SDL_DLINK_DIR}/include/SDL3"
+    "D:/l4t/SDL-dlink/include"
+    "D:/l4t/SDL-dlink/include/SDL3"
     "${NEKO3D_DIR}/include"
+    "D:/l4t/neko3d/include"
     "${DLINK_DIR}/include"
+    "D:/l4t/neko3d/extern/libnx-dlink/include"
+    "D:/l4t/SDL-dlink/extern/libnx-dlink/include"
+    "D:/l4t/libnx-dlink/include"
+    "D:/l4t/dusklight/extern/libnx-dlink/include"
 )
 
 target_link_libraries(nekoDS-switch.elf PRIVATE core)
@@ -76,7 +84,12 @@ target_link_options(nekoDS-switch.elf PRIVATE
 # --- hostneed flags: force every dnro import into the host link ---
 # sdl3.dnro + neko3d.dnro publish their host imports in .undef files.
 set(_sdl_undef "${SDL_DLINK_DIR}/dnro/sdl3.undef")
-set(_neko_undef "${NEKO3D_DIR}/neko3d-module/neko3d.undef")
+set(_neko_undef1 "${NEKO3D_DIR}/neko3d-module/neko3d.undef")
+set(_neko_undef2 "${SDL_DLINK_DIR}/extern/neko3d/neko3d-module/neko3d.undef")
+set(_neko_undef "${_neko_undef1}")
+if(NOT EXISTS "${_neko_undef}" AND EXISTS "${_neko_undef2}")
+    set(_neko_undef "${_neko_undef2}")
+endif()
 set(_hostneed "")
 foreach(_f ${_sdl_undef} ${_neko_undef})
     if (EXISTS "${_f}")

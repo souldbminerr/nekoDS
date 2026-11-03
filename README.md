@@ -22,6 +22,16 @@ Deko3d renderer based on Hy8drogen/RSDuck/ArcDelta MelonDS
 DS emulator, sorta
 
 The goal is to do things right and fast, akin to blargSNES (but hopefully better). But also to, you know, have a fun challenge :)
+building:
+cmake -B build/switch --toolchain cmake/Toolchain-Switch-DLink.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_QT_SDL=OFF -DBUILD_SWITCH_SDL=ON -DUSE_VCPKG=OFF \
+  -DSDL_DLINK_DIR=/d/l4t/SDL-dlink \
+  -DNEKO3D_DIR=/d/l4t/neko3d \
+  -DDLINK_DIR=/d/l4t/neko3d/extern/libnx-dlink \
+  -DTEAKRA_BUILD_UNIT_TESTS=OFF -DTEAKRA_BUILD_TOOLS=OFF \
+  -G Ninja
+cmake --build build/switch -j6
 <hr>
 
 ## How to use

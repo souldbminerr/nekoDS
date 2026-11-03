@@ -598,7 +598,7 @@ static void settingsMenu()
 static bool fileBrowser()
 {
     int selection = 0;
-    romPath = Config::LastROMFolder;
+    romPath = "sdmc:/";
     while (true)
     {
         std::vector<std::string> files = dirContents(romPath, ".nds");

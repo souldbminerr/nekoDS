@@ -1,6 +1,7 @@
 #include "GPU2D_Deko.h"
 #include "DekoContext.h"
 #include "GPU.h"
+#include "SwitchLog.h"
 
 #include <arm_neon.h>
 #include <assert.h>
@@ -166,29 +167,29 @@ DekoBackend::DekoBackend(melonDS::GPU& gpu) :
     SamplerDescriptors = DekoCtx::DataHeap->Alloc(sizeof(dk::SamplerDescriptor), DK_SAMPLER_DESCRIPTOR_ALIGNMENT);
     DekoCtx::DataHeap->CpuAddr<dk::SamplerDescriptor>(SamplerDescriptors)->initialize(dk::Sampler{});
 
-    DekoCtx::LoadShader("romfs:/shaders/FullscreenQuad_vsh.dksh", ShaderFullscreenQuad);
-    DekoCtx::LoadShader("romfs:/shaders/ComposeBGOBJ_fsh.dksh", ShaderComposeBGOBJ);
-    DekoCtx::LoadShader("romfs:/shaders/ComposeBGOBJDirectBitmapOnly_fsh.dksh", ShaderComposeBGOBJDirectBitmapOnly);
-    DekoCtx::LoadShader("romfs:/shaders/ComposeBGOBJShowBitmap_fsh.dksh", ShaderComposeBGOBJShowBitmap);
-    DekoCtx::LoadShader("romfs:/shaders/BGText4bpp_fsh.dksh", ShaderBGText4Bpp[0]);
-    DekoCtx::LoadShader("romfs:/shaders/BGText4bppMosaic_fsh.dksh", ShaderBGText4Bpp[1]);
-    DekoCtx::LoadShader("romfs:/shaders/BGText8bpp_fsh.dksh", ShaderBGText8bpp[0]);
-    DekoCtx::LoadShader("romfs:/shaders/BGText8bppMosaic_fsh.dksh", ShaderBGText8bpp[1]);
-    DekoCtx::LoadShader("romfs:/shaders/BGAffine_fsh.dksh", ShaderBGAffine[0]);
-    DekoCtx::LoadShader("romfs:/shaders/BGAffineMosaic_fsh.dksh", ShaderBGAffine[1]);
-    DekoCtx::LoadShader("romfs:/shaders/BGExtendedBitmap8bpp_fsh.dksh", ShaderBGExtendedBitmap8pp[0]);
-    DekoCtx::LoadShader("romfs:/shaders/BGExtendedBitmap8bppMosaic_fsh.dksh", ShaderBGExtendedBitmap8pp[1]);
-    DekoCtx::LoadShader("romfs:/shaders/BGExtendedBitmapDirect_fsh.dksh", ShaderBGExtendedBitmapDirect[0]);
-    DekoCtx::LoadShader("romfs:/shaders/BGExtendedBitmapDirectMosaic_fsh.dksh", ShaderBGExtendedBitmapDirect[1]);
-    DekoCtx::LoadShader("romfs:/shaders/BGExtendedMixed_fsh.dksh", ShaderBGExtendedMixed[0]);
-    DekoCtx::LoadShader("romfs:/shaders/BGExtendedMixedMosaic_fsh.dksh", ShaderBGExtendedMixed[1]);
-    DekoCtx::LoadShader("romfs:/shaders/OBJRegular_vsh.dksh", ShaderOBJRegular);
-    DekoCtx::LoadShader("romfs:/shaders/OBJAffine_vsh.dksh", ShaderOBJAffine);
-    DekoCtx::LoadShader("romfs:/shaders/OBJ4bpp_fsh.dksh", ShaderOBJ4bpp);
-    DekoCtx::LoadShader("romfs:/shaders/OBJ8bpp_fsh.dksh", ShaderOBJ8bpp);
-    DekoCtx::LoadShader("romfs:/shaders/OBJBitmap_fsh.dksh", ShaderOBJBitmap);
-    DekoCtx::LoadShader("romfs:/shaders/OBJWindow4bpp_fsh.dksh", ShaderOBJWindow4bpp);
-    DekoCtx::LoadShader("romfs:/shaders/OBJWindow8bpp_fsh.dksh", ShaderOBJWindow8bpp);
+    if (!DekoCtx::LoadShader("romfs:/shaders/FullscreenQuad_vsh.dksh", ShaderFullscreenQuad)) SwitchLog::Log("2D shader load failed: FullscreenQuad_vsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/ComposeBGOBJ_fsh.dksh", ShaderComposeBGOBJ)) SwitchLog::Log("2D shader load failed: ComposeBGOBJ_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/ComposeBGOBJDirectBitmapOnly_fsh.dksh", ShaderComposeBGOBJDirectBitmapOnly)) SwitchLog::Log("2D shader load failed: ComposeBGOBJDirectBitmapOnly_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/ComposeBGOBJShowBitmap_fsh.dksh", ShaderComposeBGOBJShowBitmap)) SwitchLog::Log("2D shader load failed: ComposeBGOBJShowBitmap_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGText4bpp_fsh.dksh", ShaderBGText4Bpp[0])) SwitchLog::Log("2D shader load failed: BGText4bpp_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGText4bppMosaic_fsh.dksh", ShaderBGText4Bpp[1])) SwitchLog::Log("2D shader load failed: BGText4bppMosaic_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGText8bpp_fsh.dksh", ShaderBGText8bpp[0])) SwitchLog::Log("2D shader load failed: BGText8bpp_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGText8bppMosaic_fsh.dksh", ShaderBGText8bpp[1])) SwitchLog::Log("2D shader load failed: BGText8bppMosaic_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGAffine_fsh.dksh", ShaderBGAffine[0])) SwitchLog::Log("2D shader load failed: BGAffine_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGAffineMosaic_fsh.dksh", ShaderBGAffine[1])) SwitchLog::Log("2D shader load failed: BGAffineMosaic_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGExtendedBitmap8bpp_fsh.dksh", ShaderBGExtendedBitmap8pp[0])) SwitchLog::Log("2D shader load failed: BGExtendedBitmap8bpp_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGExtendedBitmap8bppMosaic_fsh.dksh", ShaderBGExtendedBitmap8pp[1])) SwitchLog::Log("2D shader load failed: BGExtendedBitmap8bppMosaic_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGExtendedBitmapDirect_fsh.dksh", ShaderBGExtendedBitmapDirect[0])) SwitchLog::Log("2D shader load failed: BGExtendedBitmapDirect_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGExtendedBitmapDirectMosaic_fsh.dksh", ShaderBGExtendedBitmapDirect[1])) SwitchLog::Log("2D shader load failed: BGExtendedBitmapDirectMosaic_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGExtendedMixed_fsh.dksh", ShaderBGExtendedMixed[0])) SwitchLog::Log("2D shader load failed: BGExtendedMixed_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/BGExtendedMixedMosaic_fsh.dksh", ShaderBGExtendedMixed[1])) SwitchLog::Log("2D shader load failed: BGExtendedMixedMosaic_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/OBJRegular_vsh.dksh", ShaderOBJRegular)) SwitchLog::Log("2D shader load failed: OBJRegular_vsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/OBJAffine_vsh.dksh", ShaderOBJAffine)) SwitchLog::Log("2D shader load failed: OBJAffine_vsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/OBJ4bpp_fsh.dksh", ShaderOBJ4bpp)) SwitchLog::Log("2D shader load failed: OBJ4bpp_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/OBJ8bpp_fsh.dksh", ShaderOBJ8bpp)) SwitchLog::Log("2D shader load failed: OBJ8bpp_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/OBJBitmap_fsh.dksh", ShaderOBJBitmap)) SwitchLog::Log("2D shader load failed: OBJBitmap_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/OBJWindow4bpp_fsh.dksh", ShaderOBJWindow4bpp)) SwitchLog::Log("2D shader load failed: OBJWindow4bpp_fsh");
+    if (!DekoCtx::LoadShader("romfs:/shaders/OBJWindow8bpp_fsh.dksh", ShaderOBJWindow8bpp)) SwitchLog::Log("2D shader load failed: OBJWindow8bpp_fsh");
 
     BGUniformMemory = DekoCtx::DataHeap->Alloc(BGUniformSize, DK_UNIFORM_BUF_ALIGNMENT);
     OBJUniformMemory = DekoCtx::DataHeap->Alloc(OBJUniformSize, DK_UNIFORM_BUF_ALIGNMENT);
@@ -1674,6 +1675,7 @@ void DekoBackend::FlushOBJDraw(u32 curline)
             {
                 if (numSprites[i] > 0)
                 {
+                    if (!vertShaders[i] || !fragShaders[i]) continue;
                     EmuCmdBuf.bindShaders(DkStageFlag_GraphicsMask, {vertShaders[i], fragShaders[i]});
 
                     DkGpuAddr vertexBuffer = UploadBuf.UploadData(EmuCmdBuf, numSprites[i]*sizeof(SpriteSpec), (u8*)sprites[i]);
@@ -1707,6 +1709,7 @@ void DekoBackend::FlushOBJDraw(u32 curline)
             {
                 if (numSprites[i] > 0)
                 {
+                    if (!vertShaders[i] || !fragShaders[i]) continue;
                     EmuCmdBuf.bindShaders(DkStageFlag_GraphicsMask, {vertShaders[i], fragShaders[i]});
 
                     DkGpuAddr vertexBuffer = UploadBuf.UploadData(EmuCmdBuf, numSprites[i]*sizeof(SpriteSpec), (u8*)sprites[i]);
@@ -1806,6 +1809,7 @@ void DekoBackend::FlushBGDraw(u32 curline, u32 bgmask)
                     ShaderBGExtendedBitmapDirect,
                     ShaderBGExtendedMixed
                 };
+                // skip if invalid (dk::Shader may not be bool-convertible)
                 EmuCmdBuf.bindShaders(DkStageFlag_GraphicsMask,
                 {
                     &ShaderFullscreenQuad,
@@ -1888,6 +1892,7 @@ void DekoBackend::ComposeBGOBJ()
             EmuCmdBuf.bindRenderTargets({&colorTarget});
             shader = showDirectBitmap ? &ShaderComposeBGOBJDirectBitmapOnly : &ShaderComposeBGOBJ;
         }
+        // skip if invalid (dk::Shader may not be bool-convertible)
         EmuCmdBuf.bindShaders(DkStageFlag_GraphicsMask, {&ShaderFullscreenQuad, shader});
 
         DkScissor scissor = {0, firstLine, 256, region.LinesCount};
@@ -1999,9 +2004,16 @@ void DekoBackend::ComposeBGOBJ()
 
     if (CurUnit->Num == 0 && CaptureLatch)
     {
-        dk::ImageView src{CaptureCnt & (1<<24) ? _3DFramebuffer : BGOBJTexture};
-        EmuCmdBuf.copyImageToBuffer(src, {0, 0, 0, 256, 192, 1}, {DekoCtx::DataHeap->GpuAddr(DisplayCaptureMemory)});
-        EmuCmdBuf.signalFence(DisplayCaptureFence, true);
+        if (!DekoCtx::DataHeap)
+        {
+            EmuCmdBuf.signalFence(DisplayCaptureFence, true);
+        }
+        else
+        {
+            dk::ImageView src{CaptureCnt & (1<<24) ? _3DFramebuffer : BGOBJTexture};
+            EmuCmdBuf.copyImageToBuffer(src, {0, 0, 0, 256, 192, 1}, {DekoCtx::DataHeap->GpuAddr(DisplayCaptureMemory), 256 * 4, 192});
+            EmuCmdBuf.signalFence(DisplayCaptureFence, true);
+        }
     }
 }
 

@@ -67,8 +67,7 @@ private:
     dk::Shader ShaderFinalPass[8];
 
     CmdMemRing<2> CmdMem;
-    GpuMemHeap::Allocation YSpanIndicesTextureMemory;
-    dk::Image YSpanIndicesTexture;
+    GpuMemHeap::Allocation YSpanIndicesMemory[2];
     GpuMemHeap::Allocation YSpanSetupMemory[2];
     GpuMemHeap::Allocation XSpanSetupMemory;
     GpuMemHeap::Allocation BinResultMemory;

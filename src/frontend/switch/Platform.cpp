@@ -10,7 +10,15 @@
 #include <functional>
 #include <string>
 #include <switch.h>
+#if __has_include("dlink/dlink.h")
+#include "dlink/dlink.h"
+#elif __has_include("D:/l4t/libnx-dlink/include/dlink/dlink.h")
+#include "D:/l4t/libnx-dlink/include/dlink/dlink.h"
+#elif __has_include("D:/l4t/neko3d/extern/libnx-dlink/include/dlink/dlink.h")
+#include "D:/l4t/neko3d/extern/libnx-dlink/include/dlink/dlink.h"
+#else
 #include <dlink/dlink.h>
+#endif
 
 #include "Platform.h"
 #include "SPI_Firmware.h"

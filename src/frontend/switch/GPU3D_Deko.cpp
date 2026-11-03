@@ -40,27 +40,24 @@ bool DekoBackend::Init()
     for (int i = 0; i < 2; i++)
     {
         YSpanSetupMemory[i] = DekoCtx::DataHeap->Alloc(sizeof(SpanSetupY)*MaxYSpanSetups, 4);
+        memset(DekoCtx::DataHeap->CpuAddr<void>(YSpanSetupMemory[i]), 0, YSpanSetupMemory[i].Size);
 
         RenderPolygonMemory[i] = DekoCtx::DataHeap->Alloc(sizeof(RenderPolygon)*2048, 4);
+        memset(DekoCtx::DataHeap->CpuAddr<void>(RenderPolygonMemory[i]), 0, RenderPolygonMemory[i].Size);
+
+        YSpanIndicesMemory[i] = DekoCtx::DataHeap->Alloc(MaxYSpanIndices * sizeof(SetupIndices), 16);
+        memset(DekoCtx::DataHeap->CpuAddr<void>(YSpanIndicesMemory[i]), 0, YSpanIndicesMemory[i].Size);
     }
 
     TileMemory = DekoCtx::DataHeap->Alloc(sizeof(Tiles), alignof(Tiles));
 
     XSpanSetupMemory = DekoCtx::DataHeap->Alloc(sizeof(SpanSetupX)*MaxYSpanIndices, alignof(SpanSetupX));
+    memset(DekoCtx::DataHeap->CpuAddr<void>(XSpanSetupMemory), 0, XSpanSetupMemory.Size);
 
     BinResultMemory = DekoCtx::DataHeap->Alloc(sizeof(BinResult), alignof(BinResult));
     memset(DekoCtx::DataHeap->CpuAddr<void>(BinResultMemory), 0, sizeof(BinResult));
 
     FinalTileMemory = DekoCtx::DataHeap->Alloc(sizeof(FinalTiles), alignof(FinalTiles));
-
-    dk::ImageLayout yspanIndicesLayout;
-    dk::ImageLayoutMaker{DekoCtx::Device}
-        .setType(DkImageType_Buffer)
-        .setDimensions(MaxYSpanIndices)
-        .setFormat(DkImageFormat_RGBA16_Uint)
-        .initialize(yspanIndicesLayout);
-    YSpanIndicesTextureMemory = DekoCtx::TextureHeap->Alloc(yspanIndicesLayout.getSize(), yspanIndicesLayout.getAlignment());
-    YSpanIndicesTexture.initialize(yspanIndicesLayout, DekoCtx::TextureHeap->MemBlock, YSpanIndicesTextureMemory.Offset);
 
     DekoCtx::LoadShader("romfs:/shaders/InterpXSpansZBuffer.dksh", ShaderInterpXSpans[0]);
     DekoCtx::LoadShader("romfs:/shaders/InterpXSpansWBuffer.dksh", ShaderInterpXSpans[1]);
@@ -96,16 +93,18 @@ bool DekoBackend::Init()
     DekoCtx::LoadShader("romfs:/shaders/FinalPassFogAA.dksh", ShaderFinalPass[6]);
     DekoCtx::LoadShader("romfs:/shaders/FinalPassEdgeFogAA.dksh", ShaderFinalPass[7]);
 
-    // TEMP diagnosis: null shaders bind code address 0 -> GPU read fault at 0x0.
+    // check critical shaders
     if (!ShaderBinCombined.isValid() || !ShaderInterpXSpans[0].isValid() || !ShaderInterpXSpans[1].isValid()
         || !ShaderRasteriseNoTexture[0].isValid() || !ShaderRasteriseNoTexture[1].isValid()
-        || !ShaderFinalPass[0].isValid() || !ShaderClearCoarseBinMask.isValid() || !ShaderSortWork.isValid())
-        SwitchLog::Log("deko 3D init: WARNING a shader failed to load (null bind = fault at 0x0)");
+        || !ShaderClearCoarseBinMask.isValid() || !ShaderSortWork.isValid())
+    {
+        SwitchLog::Log("deko 3D init: critical shader failed to load");
+        return false;
+    }
 
     {
         ImageDescriptors = DekoCtx::DataHeap->Alloc(sizeof(dk::ImageDescriptor)*descriptorOffset_Count, DK_IMAGE_DESCRIPTOR_ALIGNMENT);
         dk::ImageDescriptor* descriptors = DekoCtx::DataHeap->CpuAddr<dk::ImageDescriptor>(ImageDescriptors);
-        descriptors[descriptorOffset_YSpanIndices].initialize(YSpanIndicesTexture, true);
         descriptors[descriptorOffset_FinalFB].initialize(Backend2D->Get3DFramebuffer(), true);
     }
 
@@ -1192,7 +1191,10 @@ void DekoBackend::RenderFrame()
     {
         SpanSetupY* yspans = DekoCtx::DataHeap->CpuAddr<SpanSetupY>(YSpanSetupMemory[curSlice]);
         memcpy(yspans, YSpanSetups, sizeof(SpanSetupY)*numYSpans);
-        UploadBuf.UploadAndCopyData(EmuCmdBuf, DekoCtx::TextureHeap->GpuAddr(YSpanIndicesTextureMemory), (u8*)YSpanIndices, numSetupIndices*4*2);
+
+        SetupIndices* yidx = DekoCtx::DataHeap->CpuAddr<SetupIndices>(YSpanIndicesMemory[curSlice]);
+        if (numSetupIndices > 0)
+            memcpy(yidx, YSpanIndices, numSetupIndices * sizeof(SetupIndices));
 
         memcpy(DekoCtx::DataHeap->CpuAddr<void>(RenderPolygonMemory[curSlice]), RenderPolygons, GPU.GPU3D.RenderNumPolygons*sizeof(RenderPolygon));
 
@@ -1215,7 +1217,8 @@ void DekoBackend::RenderFrame()
         {DekoCtx::DataHeap->GpuAddr(RenderPolygonMemory[curSlice]), RenderPolygonMemory[curSlice].Size},
         {gpuAddrBinResult, BinResultMemory.Size},
         {DekoCtx::DataHeap->GpuAddr(TileMemory), TileMemory.Size},
-        {DekoCtx::DataHeap->GpuAddr(FinalTileMemory), FinalTileMemory.Size}
+        {DekoCtx::DataHeap->GpuAddr(FinalTileMemory), FinalTileMemory.Size},
+        {DekoCtx::DataHeap->GpuAddr(YSpanIndicesMemory[curSlice]), YSpanIndicesMemory[curSlice].Size},
     });
 
     MetaUniform meta;
@@ -1289,7 +1292,6 @@ void DekoBackend::RenderFrame()
         EmuCmdBuf.dispatchCompute((numVariants+31)/32, 1, 1);
 
         // calculate x-spans
-        EmuCmdBuf.bindImages(DkStage_Compute, 0, {dkMakeImageHandle(descriptorOffset_YSpanIndices)});
         EmuCmdBuf.bindShaders(DkStageFlag_Compute, {&ShaderInterpXSpans[wbuffer]});
         EmuCmdBuf.dispatchCompute((numSetupIndices + 31) / 32, 1, 1);
         EmuCmdBuf.barrier(DkBarrier_Primitives, 0);

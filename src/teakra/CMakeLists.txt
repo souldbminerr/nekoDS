@@ -30,6 +30,9 @@ endif()
 
 # Add the module directory to the list of paths
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
+if(EXISTS "${PROJECT_SOURCE_DIR}/CMakeModules/CreateDirectoryGroups.cmake")
+  include(CreateDirectoryGroups)
+endif()
 
 # Compiler flags
 if (MSVC)
@@ -73,8 +76,10 @@ else()
 endif()
 
 # Prefer the -pthread flag on Linux.
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
+if(NOT SWITCH)
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+endif()
 
 enable_testing()
 

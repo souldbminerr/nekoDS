@@ -135,9 +135,20 @@ bool LoadShader(const char* path, dk::Shader& out)
         fclose(f);
         return false;
     }
+    if (header.magic != 0x48534B44) // 'DKSH'
+    {
+        SwitchLog::Log("bad shader magic %s %08x", path, header.magic);
+        fclose(f);
+        return false;
+    }
 
-    rewind(f);
     u8* ctrlmem = new u8[header.control_sz];
+    if (fseek(f, header.header_sz, SEEK_SET) != 0)
+    {
+        delete[] ctrlmem;
+        fclose(f);
+        return false;
+    }
     if (fread(ctrlmem, header.control_sz, 1, f) != 1)
     {
         delete[] ctrlmem;
@@ -145,6 +156,32 @@ bool LoadShader(const char* path, dk::Shader& out)
         return false;
     }
 
+    if (header.programs_off >= header.control_sz + header.header_sz)
+    {
+        if (fseek(f, header.programs_off, SEEK_SET) != 0)
+        {
+            delete[] ctrlmem;
+            fclose(f);
+            return false;
+        }
+    }
+    else
+    {
+        // code follows control
+        if (fseek(f, header.header_sz + header.control_sz, SEEK_SET) != 0)
+        {
+            delete[] ctrlmem;
+            fclose(f);
+            return false;
+        }
+    }
+
+    if (!ShaderCodeHeap)
+    {
+        delete[] ctrlmem;
+        fclose(f);
+        return false;
+    }
     GpuMemHeap::Allocation data = ShaderCodeHeap->Alloc(header.code_sz, DK_SHADER_CODE_ALIGNMENT);
     if (fread(ShaderCodeHeap->CpuAddr<void>(data), header.code_sz, 1, f) != 1)
     {
@@ -164,11 +201,13 @@ bool LoadShader(const char* path, dk::Shader& out)
 }
 
 void ReadbackImage(dk::Image& image, void* dstCpu, u32 width, u32 height){
+    if (!DataHeap || !ReadbackCmdMem || QueueInErrorState())
+        return;
     ReadbackCmdMem->Begin(EmuCmdBuf);
     EmuCmdBuf.barrier(DkBarrier_Full, DkInvalidateFlags_Image);
     // same value convention as donor DoCapture (GPU2D_Deko.cpp)
     EmuCmdBuf.copyImageToBuffer(dk::ImageView{image}, {0, 0, 0, width, height, 1},
-        {DataHeap->GpuAddr(ReadbackStaging)});
+        {DataHeap->GpuAddr(ReadbackStaging), width * 4, height});
     EmuQueue.submitCommands(ReadbackCmdMem->End(EmuCmdBuf));
     EmuQueue.waitIdle();
 

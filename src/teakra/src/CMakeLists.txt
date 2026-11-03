@@ -42,9 +42,13 @@ if (TEAKRA_BUILD_UNIT_TESTS)
     )
 endif()
 
-create_target_directory_groups(teakra)
+if(COMMAND create_target_directory_groups)
+    create_target_directory_groups(teakra)
+endif()
 
-target_link_libraries(teakra PRIVATE Threads::Threads)
+if(TARGET Threads::Threads)
+    target_link_libraries(teakra PRIVATE Threads::Threads)
+endif()
 target_include_directories(teakra
                            PUBLIC ../include
                            PRIVATE .)
@@ -66,4 +70,7 @@ if (TEAKRA_BUILD_TOOLS)
     add_subdirectory(mod_test_generator)
     add_subdirectory(step2_test_generator)
     add_subdirectory(makedsp1)
+endif()
+if(COMMAND create_target_directory_groups)
+    create_target_directory_groups(teakra)
 endif()
