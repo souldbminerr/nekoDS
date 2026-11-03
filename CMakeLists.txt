@@ -98,15 +98,40 @@ endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+if (SWITCH)
+    # Switch has no OpenGL via SDL-dlink
+    set(BUILD_QT_SDL OFF)
+    # libnx BSD sockets differ from POSIX; keep the GDB stub off by default.
+    set(ENABLE_GDBSTUB OFF)
+    # The core's __SWITCH__ JIT fault-handler path targets a pre-1.0 core
+    # API (Melon::FaultHandler, static NDS members) and does not compile;
+    # Switch builds use the interpreter, like the old switch port.
+    set(ENABLE_JIT OFF)
+    # NOTE: must precede the option()/add_definitions() calls below.
+endif()
+
 option(ENABLE_GDBSTUB "Enable GDB stub" ON)
 if (ENABLE_GDBSTUB)
     add_definitions(-DGDBSTUB_ENABLED)
 endif()
 
 option(BUILD_QT_SDL "Build Qt/SDL frontend" ON)
+option(BUILD_SWITCH_SDL "Build Switch/SDL3 frontend (devkitA64 + Switch toolchain only)" OFF)
+
+if (SWITCH)
+    # Re-assert after the option() defaults above (no-op if already OFF).
+    set(ENABLE_OGLRENDERER OFF)
+    set(BUILD_QT_SDL OFF)
+    set(ENABLE_GDBSTUB OFF)
+    set(ENABLE_JIT OFF)
+endif()
 
 add_subdirectory(src)
 
 if (BUILD_QT_SDL)
     add_subdirectory(src/frontend/qt_sdl)
+endif()
+
+if (BUILD_SWITCH_SDL)
+    add_subdirectory(src/frontend/switch)
 endif()
