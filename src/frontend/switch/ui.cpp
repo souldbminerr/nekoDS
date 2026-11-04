@@ -1,8 +1,20 @@
-// nekoDS Switch UI — SDL3 port of melonDS old switch ui.cpp.
-// Same menu UX; GL calls replaced with SDL_Render* via dynamic dispatch.
-// Text uses SDL_RenderDebugText (built into SDL3, no font assets needed).
-// Bitmap icons (ROM icons, file/folder BMPs) go through one reusable
-// streaming texture.
+/*
+    Copyright 2026 Souldbminer
+
+    This file is part of nekoDS.
+
+    nekoDS is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    nekoDS is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with nekoDS. If not, see http://www.gnu.org/licenses/.
+*/
 
 #include <algorithm>
 #include <chrono>

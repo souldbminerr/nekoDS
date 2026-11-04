@@ -26,9 +26,9 @@ building:
 cmake -B build/switch --toolchain cmake/Toolchain-Switch-DLink.cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_QT_SDL=OFF -DBUILD_SWITCH_SDL=ON -DUSE_VCPKG=OFF \
-  -DSDL_DLINK_DIR=/d/l4t/SDL-dlink \
-  -DNEKO3D_DIR=/d/l4t/neko3d \
-  -DDLINK_DIR=/d/l4t/neko3d/extern/libnx-dlink \
+  -DSDL_DLINK_DIR=(where you put sdl-dlink) \
+  -DNEKO3D_DIR=(where you put neko3d) \
+  -DDLINK_DIR=(where you put dlink) \
   -DTEAKRA_BUILD_UNIT_TESTS=OFF -DTEAKRA_BUILD_TOOLS=OFF \
   -G Ninja
 cmake --build build/switch -j6

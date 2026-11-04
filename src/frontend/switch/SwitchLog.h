@@ -21,7 +21,8 @@ inline FILE*& Handle()
 
 inline void Init()
 {
-    if (Handle()) return;
+    if (Handle())
+        return;
     mkdir("sdmc:/switch", 0777);
     mkdir("sdmc:/switch/nekoDS", 0777);
     Handle() = fopen("sdmc:/switch/nekoDS/nekoDS.log", "w");

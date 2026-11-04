@@ -1,10 +1,22 @@
-// nekoDS Switch UI — ported from melonDS old switch port (ui.h).
-// Rendering backend swapped from EGL/OpenGL to the dynamically loaded
-// SDL3 deko3d renderer (sdl3.dnro). Menu flow (menuScreen/messageScreen)
-// and theming are unchanged.
+/*
+    Copyright 2026 Souldbminer
 
-#ifndef NEKODS_SWITCH_UI_H
-#define NEKODS_SWITCH_UI_H
+    This file is part of nekoDS.
+
+    nekoDS is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    nekoDS is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with nekoDS. If not, see http://www.gnu.org/licenses/.
+*/
+
+#pragma once
 
 #include <string>
 #include <vector>
@@ -12,8 +24,7 @@
 
 #include "SwitchSDL.h"
 
-typedef struct
-{
+typedef struct {
     u32* texture;
     int size;
 } Icon;
@@ -46,5 +57,3 @@ u64 menuScreen(std::string title, std::string actionPlus, std::string actionX,
 u64 messageScreen(std::string title, std::vector<std::string> text, bool exit);
 
 std::vector<std::string> dirContents(std::string directory, std::string extension);
-
-#endif
