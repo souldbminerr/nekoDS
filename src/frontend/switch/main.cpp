@@ -312,7 +312,7 @@ static void audioOutput(void* args)
 {
     (void)args;
 
-    constexpr int SamplesPerBuffer = 768;
+    constexpr int SamplesPerBuffer = 1024;
     constexpr int Channels = 2;
     constexpr int BufferCount = 2;
 
