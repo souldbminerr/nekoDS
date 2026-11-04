@@ -307,48 +307,80 @@ static bool loadStateFile(const std::string& path)
     return true;
 }
 
-// ---- audio (SDL stream, resampled like the old port) ----
+/* copied from MelonDS gheovgos */
 static void audioOutput(void* args)
 {
     (void)args;
-    // SPU outputs at OutputSampleRate (48000, set at NDS creation), so feed
-    // straight through with no resampling. Pad short reads with the last
-    // sample to avoid underrun gaps when emulation stutters.
-    s16 buf[512 * 2];
-    while (!quitFlag && !(hotkeyMask & BIT(2))) {
-        int num_in = 0;
 
-        if (ConsoleRunning && Console)
-            num_in = Console->SPU.ReadOutput(buf, 512);
+    constexpr int SamplesPerBuffer = 768;
+    constexpr int Channels = 2;
+    constexpr int BufferCount = 2;
 
-        if (num_in <= 0) {
-            Console->SPU.Sync(false);
+    constexpr int BufferBytes =
+        SamplesPerBuffer * Channels * sizeof(s16);
+
+    constexpr int MaxQueuedBytes = BufferBytes * BufferCount;
+
+    s16 buffer[SamplesPerBuffer * Channels];
+
+    // Start SDL playback.
+    S.ResumeAudioStreamDevice(AudioStream);
+
+    while (!quitFlag)
+    {
+        if (!ConsoleRunning || !Console)
+        {
+            svcSleepThread(10000000);
             continue;
         }
-        if (num_in < 512) {
-            u32 last = ((u32*)buf)[num_in - 1];
-            for (int i = num_in; i < 512; i++)
-                ((u32*)buf)[i] = last;
+
+        // Maintain a maximum of two buffers queued.
+        int queued = S.GetAudioStreamQueued(AudioStream);
+
+        if (queued >= BufferBytes)
+        {
+            svcSleepThread(2000000);
+            continue;
         }
 
-        for (int i = 0; i < num_in * 2; i++) {
-            int32_t sample = (int32_t)buf[i] * Config::AudioVolume / 4;
+        int nSamples = Console->SPU.ReadOutput(
+            buffer,
+            SamplesPerBuffer
+        );
 
-            if (sample > 32767) 
-                sample = 32767;
-            
-            if (sample < -32768) 
-                sample = -32768;
-
-            buf[i] = (s16)sample;
+        if (nSamples <= 0)
+        {
+            svcSleepThread(1000000);
+            continue;
         }
 
-        if (AudioStream) {
-            // don't let the queue grow unbounded when fast-forwarding/paused
-            if (S.GetAudioStreamQueued(AudioStream) < 512 * 2 * sizeof(s16) * 4)
-                S.PutAudioStreamData(AudioStream, buf, sizeof(buf));
+        // Pad incomplete buffers with the last stereo sample.
+        if (nSamples < SamplesPerBuffer)
+        {
+            u32 last = ((u32*)buffer)[nSamples - 1];
+
+            for (int i = nSamples; i < SamplesPerBuffer; i++)
+                ((u32*)buffer)[i] = last;
         }
-        Console->SPU.Sync(false);
+
+        // Apply volume.
+        for (int i = 0; i < SamplesPerBuffer * Channels; i++)
+        {
+            int32_t sample =
+                (int32_t)buffer[i] * Config::AudioVolume / 4;
+
+            if (sample > 32767) sample = 32767;
+            if (sample < -32768) sample = -32768;
+
+            buffer[i] = (s16)sample;
+        }
+
+        // Submit the complete buffer.
+        S.PutAudioStreamData(
+            AudioStream,
+            buffer,
+            BufferBytes
+        );
     }
 }
 
@@ -756,18 +788,20 @@ int main(int argc, char** argv)
 
     TexTop = S.CreateTexture(Ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 256, 192);
     TexBot = S.CreateTexture(Ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 256, 192);
-    if (!TexTop || !TexBot) { SwitchLog::Log("FATAL: texture: %s", S.GetError()); return 1; }
+    if (!TexTop || !TexBot) { 
+        SwitchLog::Log("FATAL: Couldnt create texture(s) with error %s", S.GetError());
+        return 1; 
+    }
+    
     S.SetTextureScaleMode(TexTop, SDL_SCALEMODE_LINEAR);
     S.SetTextureScaleMode(TexBot, SDL_SCALEMODE_LINEAR);
 
-    SDL_AudioSpec want = {};
-    want.freq = 48000; want.format = SDL_AUDIO_S16; want.channels = 2;
-    AudioStream = S.OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &want, nullptr, nullptr);
-    SwitchLog::Log("audio stream: %p", (void*)AudioStream);
+    SDL_AudioSpec StreamConfiguration = {};
+    StreamConfiguration.freq = 48000;
+    StreamConfiguration.format = SDL_AUDIO_S16; 
+    StreamConfiguration.channels = 2;
+    AudioStream = S.OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &StreamConfiguration, nullptr, nullptr);
 
-    // romfs (shaders + theme bitmaps) stays mounted for the whole session.
-    // (loadTheme no longer manages it: the deko shader loader needs romfs
-    // mounted when emulation starts, long after the menus first used it.)
     Result romfsRc = romfsInit();
     SwitchLog::Log("romfs init: 0x%X", romfsRc);
 
