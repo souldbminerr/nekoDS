@@ -20,7 +20,7 @@
 
 namespace Config {
 
-    extern z64 Mapping[15];
+    extern u64 Mapping[15];
 
     extern int ScreenRotation; // 0..3
     extern int ScreenGap;
