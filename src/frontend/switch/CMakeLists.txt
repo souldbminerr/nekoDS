@@ -49,9 +49,9 @@ set(SOURCES_SWITCH_SDL
 
 # Regeneration helpers (not built): gen_dispatch.py, port_deko.py.
 
-add_executable(nekoDS-switch.elf ${SOURCES_SWITCH_SDL})
+add_executable(nekoDS.elf ${SOURCES_SWITCH_SDL})
 
-target_include_directories(nekoDS-switch.elf PRIVATE
+target_include_directories(nekoDS.elf PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/../.."
     "${SDL_DLINK_DIR}/include"
@@ -67,11 +67,11 @@ target_include_directories(nekoDS-switch.elf PRIVATE
     "D:/l4t/dusklight/extern/libnx-dlink/include"
 )
 
-target_link_libraries(nekoDS-switch.elf PRIVATE core)
-target_link_libraries(nekoDS-switch.elf PRIVATE dlink nx m)
+target_link_libraries(nekoDS.elf PRIVATE core)
+target_link_libraries(nekoDS.elf PRIVATE dlink nx m)
 
 # Host must export its dynamic symbols for dlink modules.
-target_link_options(nekoDS-switch.elf PRIVATE
+target_link_options(nekoDS.elf PRIVATE
     "LINKER:--export-dynamic"
     "LINKER:-z,nopack-relative-relocs"
     "LINKER:--gc-sections"
@@ -105,7 +105,7 @@ foreach(_f ${_sdl_undef} ${_neko_undef})
     endif()
 endforeach()
 list(REMOVE_DUPLICATES _hostneed)
-target_link_options(nekoDS-switch.elf PRIVATE ${_hostneed})
+target_link_options(nekoDS.elf PRIVATE ${_hostneed})
 
 # --- offline UAM shaders -> romfs (donor: melonDS-new frontend/switch) ---
 make_directory(${CMAKE_BINARY_DIR}/romfs/shaders)
@@ -168,18 +168,30 @@ compile_shader_instance(comp shaders/GPU3D_Comp ClearIndirectWorkCount "ClearInd
 compile_shader_instance(comp shaders/GPU3D_Comp CalculateWorkOffsets "CalculateWorkOffsets")
 compile_shader_instance(comp shaders/GPU3D_Comp SortWork "SortWork")
 
-add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/nekoDS-switch.nacp"
-    COMMAND ${NACPTOOL} --create "nekoDS" "Horizon-OC" "1.1" "${CMAKE_BINARY_DIR}/nekoDS-switch.nacp"
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/nekoDS.nacp"
+    COMMAND ${NACPTOOL} --create
+            "[QEXTEmu] nekoDS"
+            "Horizon-OC"
+            "1.1"
+            "${CMAKE_CURRENT_BINARY_DIR}/nekoDS.nacp"
     COMMENT "Generating Switch NACP"
 )
 
-# NRO packaging. NOTE: romfsdir embeds romfs/shaders/*.dksh (offline UAM).
-# sdmc:/lib/{sdl3,neko3d}.dnro still ship alongside (dynamic loading).
-add_custom_target(nekoDS-switch.nro ALL
-    COMMAND ${ELF2NRO} "$<TARGET_FILE:nekoDS-switch.elf>" "${CMAKE_BINARY_DIR}/nekoDS-switch.nro"
-            --nacp="${CMAKE_BINARY_DIR}/nekoDS-switch.nacp" --romfsdir="${CMAKE_BINARY_DIR}/romfs"
-    DEPENDS nekoDS-switch.elf
-    "${CMAKE_BINARY_DIR}/nekoDS-switch.nacp"
-    "${shader_paths}"
-    COMMENT "Packaging Switch NRO (+ romfs shaders)"
+add_custom_target(nekoDS-nacp
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/nekoDS.nacp"
+)
+
+add_custom_target(nekoDS.nro ALL
+    COMMAND ${ELF2NRO}
+            "$<TARGET_FILE:nekoDS.elf>"
+            "${CMAKE_CURRENT_BINARY_DIR}/nekoDS.nro"
+            --nacp="${CMAKE_CURRENT_BINARY_DIR}/nekoDS.nacp"
+            --icon="${CMAKE_CURRENT_SOURCE_DIR}/icon.jpg"
+            --romfsdir="${CMAKE_BINARY_DIR}/romfs"
+    DEPENDS
+            nekoDS.elf
+            nekoDS-nacp
+            ${shader_paths}
+    COMMENT "Packaging NRO"
 )
