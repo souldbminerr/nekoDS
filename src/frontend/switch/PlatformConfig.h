@@ -1,35 +1,44 @@
-#ifndef NEKODS_SWITCH_PLATFORMCONFIG_H
-#define NEKODS_SWITCH_PLATFORMCONFIG_H
+/*
+    Copyright 2026 Souldbminer
 
-// Minimal Switch config, ported from melonDS old switch port
-// (src/switch/PlatformConfig.h). Plain globals + tiny INI load/save,
-// no Qt/TOML dependency.
+    This file is part of nekoDS.
 
-namespace Config
-{
+    nekoDS is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
 
-extern u64 Mapping[15];
+    nekoDS is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-extern int ScreenRotation; // 0..3
-extern int ScreenGap;
-extern int ScreenLayout;   // 0=natural, 1=vertical, 2=horizontal
-extern int ScreenSizing;   // 0=even, 1=emphTop, 2=emphBot
+    You should have received a copy of the GNU General Public License along
+    with nekoDS. If not, see http://www.gnu.org/licenses/.
+*/
 
-extern int LimitFPS;
+#pragma once
 
-extern int DirectBoot;
-extern int SavestateRelocSRAM;
+namespace Config {
 
-extern int AudioVolume;    // 0..4
-extern int MicInputType;   // 0=none, 1=mic, 2=noise
+    extern z64 Mapping[15];
 
-extern char LastROMFolder[512];
+    extern int ScreenRotation; // 0..3
+    extern int ScreenGap;
+    extern int ScreenLayout;   // 0=natural, 1=vertical, 2=horizontal
+    extern int ScreenSizing;   // 0=even, 1=emphTop, 2=emphBot
 
-extern int SwitchOverclock; // 0..3
+    extern int LimitFPS;
 
-void Load();
-void Save();
+    extern int DirectBoot;
+    extern int SavestateRelocSRAM;
 
+    extern int AudioVolume;    // 0..4
+    extern int MicInputType;   // 0=none, 1=mic, 2=noise
+
+    extern char LastROMFolder[512];
+
+    extern int SwitchOverclock; // 0..3
+
+    void Load();
+    void Save();
 } // namespace Config
-
-#endif

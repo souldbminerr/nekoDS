@@ -1,7 +1,20 @@
-// Switch file logging. printf() goes nowhere visible on hardware, so all
-// diagnostics go to sdmc:/switch/nekoDS/nekoDS.log (appended, flushed per
-// line so it survives crashes) plus a stdout mirror for nxlink sessions.
-// Opened lazily on first use; safe to call before anything else is up.
+/*
+    Copyright 2026 Souldbminer
+
+    This file is part of nekoDS.
+
+    nekoDS is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    nekoDS is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with nekoDS. If not, see http://www.gnu.org/licenses/.
+*/
 
 #ifndef NEKODS_SWITCH_LOG_H
 #define NEKODS_SWITCH_LOG_H
