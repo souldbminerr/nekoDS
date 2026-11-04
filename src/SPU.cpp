@@ -25,7 +25,9 @@
 #include "DSi.h"
 #include "DSi_I2S.h"
 #include "SPU.h"
-
+#ifdef __SWITCH__
+#include <switch.h>
+#endif
 #include "blip-buf/blip_buf.h"
 
 #define INTERNAL_SAMPLE_RATE 16756991.f
@@ -1129,7 +1131,11 @@ void SPU::Sync(bool wait)
     if (wait)
     {
         // TODO: less CPU-intensive wait?
-        while (GetOutputSize() > halflimit);
+        while (GetOutputSize() > halflimit) {
+            #ifdef __SWITCH__
+            svcSleepThread(1e6);
+            #endif
+        }
     }
     else if (GetOutputSize() > halflimit)
     {

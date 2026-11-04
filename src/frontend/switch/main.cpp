@@ -314,34 +314,41 @@ static void audioOutput(void* args)
     // SPU outputs at OutputSampleRate (48000, set at NDS creation), so feed
     // straight through with no resampling. Pad short reads with the last
     // sample to avoid underrun gaps when emulation stutters.
-    s16 buf[1024 * 2];
-    while (!quitFlag && !(hotkeyMask & BIT(2)))
-    {
+    s16 buf[512 * 2];
+    while (!quitFlag && !(hotkeyMask & BIT(2))) {
         int num_in = 0;
+
         if (ConsoleRunning && Console)
-            num_in = Console->SPU.ReadOutput(buf, 1024);
-        if (num_in <= 0)
-        {
-            svcSleepThread(2000000);
+            num_in = Console->SPU.ReadOutput(buf, 512);
+
+        if (num_in <= 0) {
+            Console->SPU.Sync(false);
             continue;
         }
-        if (num_in < 1024)
-        {
+        if (num_in < 512) {
             u32 last = ((u32*)buf)[num_in - 1];
-            for (int i = num_in; i < 1024; i++)
+            for (int i = num_in; i < 512; i++)
                 ((u32*)buf)[i] = last;
         }
-        for (int i = 0; i < 1024 * 2; i++)
-            buf[i] = (buf[i] * Config::AudioVolume * 64) >> 8;
-        if (AudioStream)
-        {
-            // don't let the queue grow unbounded when fast-forwarding/paused
-            if (S.GetAudioStreamQueued(AudioStream) < 1024 * 2 * sizeof(s16) * 4)
-                S.PutAudioStreamData(AudioStream, buf, sizeof(buf));
-            else
-                svcSleepThread(4000000);
+
+        for (int i = 0; i < num_in * 2; i++) {
+            int32_t sample = (int32_t)buf[i] * Config::AudioVolume / 4;
+
+            if (sample > 32767) 
+                sample = 32767;
+            
+            if (sample < -32768) 
+                sample = -32768;
+
+            buf[i] = (s16)sample;
         }
-        else svcSleepThread(16000000);
+
+        if (AudioStream) {
+            // don't let the queue grow unbounded when fast-forwarding/paused
+            if (S.GetAudioStreamQueued(AudioStream) < 512 * 2 * sizeof(s16) * 4)
+                S.PutAudioStreamData(AudioStream, buf, sizeof(buf));
+        }
+        Console->SPU.Sync(false);
     }
 }
 
@@ -691,22 +698,6 @@ static void drawScreens()
         // ARGB/ABGR/BGRA converters assume big-endian byte order.
         const void* upTop = top;
         const void* upBot = bottom;
-        if (!UsingDeko)
-        {
-            // soft renderer framebuffers are BGRA u32s: swizzle to RGBA bytes
-            const u32* srcT = (const u32*)top;
-            const u32* srcB = (const u32*)bottom;
-            for (int i = 0; i < 256 * 192; i++)
-            {
-                u32 ct = srcT[i], cb = srcB[i];
-                SwizzleBuf[0][i] = ((ct & 0x00FF0000u) << 8) | (ct & 0x0000FF00u) |
-                                   ((ct & 0x000000FFu) << 8) | (ct >> 24);
-                SwizzleBuf[1][i] = ((cb & 0x00FF0000u) << 8) | (cb & 0x0000FF00u) |
-                                   ((cb & 0x000000FFu) << 8) | (cb >> 24);
-            }
-            upTop = SwizzleBuf[0];
-            upBot = SwizzleBuf[1];
-        }
         S.UpdateTexture(TexTop, nullptr, upTop, 256 * 4);
         S.UpdateTexture(TexBot, nullptr, upBot, 256 * 4);
         // Layout math matches the old port; rotation is baked into which
@@ -763,8 +754,8 @@ int main(int argc, char** argv)
     if (!Ren) { SwitchLog::Log("FATAL: renderer: %s", S.GetError()); return 1; }
     SwitchLog::Log("deko3d renderer ok");
 
-    TexTop = S.CreateTexture(Ren, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 256, 192);
-    TexBot = S.CreateTexture(Ren, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 256, 192);
+    TexTop = S.CreateTexture(Ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 256, 192);
+    TexBot = S.CreateTexture(Ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 256, 192);
     if (!TexTop || !TexBot) { SwitchLog::Log("FATAL: texture: %s", S.GetError()); return 1; }
     S.SetTextureScaleMode(TexTop, SDL_SCALEMODE_LINEAR);
     S.SetTextureScaleMode(TexBot, SDL_SCALEMODE_LINEAR);
